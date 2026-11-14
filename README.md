@@ -72,4 +72,16 @@ Os dados foram normalizados com `StandardScaler` ajustado **exclusivamente** no 
 
 | Valor de $K$ | Silhouette Score | Inércia |
 | :---: | :---: | :---: |
-| ⭐ **K = 2** | **0
+| ⭐ **K = 2** | **0.3462** | **6856.86** |
+| K = 3 | 0.3137 | 5963.06 |
+| K = 4 | 0.2880 | 5463.11 |
+| K = 5 | 0.1593 | 5034.81 |
+| K = 6 | 0.1638 | 4684.62 |
+
+* ✨ **Resultado:** O valor ótimo selecionado automaticamente foi **$K = 2$** (maior *Silhouette Score* = `0.3462`), alinhando-se naturalmente às duas classes diagnósticas reais (Benigno e Maligno).
+
+### 🚀 5.2. Feature Engineering Baseada em Distâncias
+Utilizando o modelo K-Means treinado com $K = 2$, foram calculadas as distâncias euclidianas de cada amostra aos centroides dos dois grupos, gerando duas novas *features* (`dist_to_cluster_0` e `dist_to_cluster_1`). Essas colunas foram incorporadas aos conjuntos originais, criando os DataFrames enriquecidos (`X_train_aug`, `X_val_aug` e `X_test_aug`) com **32 atributos**.
+
+### 🎨 5.3. Visualização com PCA (2D)
+Por fim, aplicou-se a **Análise de Componentes Principais (PCA)** para projetar os 30 atributos padronizados em duas dimensões (`PCA_1` e `PCA_2`), permitindo comparar visualmente a separação gerada pelos clusters do K-Means com os diagnósticos clínicos reais. 🗺️

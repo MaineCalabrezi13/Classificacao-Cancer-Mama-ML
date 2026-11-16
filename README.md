@@ -1,10 +1,14 @@
 # 🎗️ Classificação de Câncer de Mama com Machine Learning (Supervisionado e Não Supervisionado)
 
-Este projeto apresenta um estudo comparativo de modelos de Machine Learning aplicados ao conjunto de dados **Breast Cancer Wisconsin (Diagnostic) (WDBC)**, disponibilizado pela biblioteca `scikit-learn`. São avaliados quatro classificadores supervisionados — Árvore de Decisão, Support Vector Machine (SVM), Random Forest e Gradient Boosting — em dois cenários: **Sem K-Means** e **Com K-Means**. O K-Means também é utilizado em análises exploratórias de agrupamento, enquanto o PCA é empregado para visualização bidimensional.
+Este projeto apresenta um estudo de modelos de Machine Learning aplicados ao conjunto de dados **Breast Cancer Wisconsin (Diagnostic) (WDBC)**, disponibilizado pela biblioteca `scikit-learn`. O repositório contém dois notebooks complementares:
 
-O objetivo é investigar se a inclusão de atributos derivados das distâncias aos centroides do K-Means altera o desempenho dos classificadores na diferenciação entre tumores benignos e malignos. Os modelos são ferramentas experimentais de apoio à análise de dados e **não substituem avaliação, diagnóstico ou decisão de profissionais de saúde**.
+- **`Modelos_Unidos.ipynb`:** compara quatro classificadores supervisionados — Árvore de Decisão, Support Vector Machine (SVM), Random Forest e Gradient Boosting — nos cenários **Sem K-Means** e **Com K-Means**. Também utiliza K-Means em análises exploratórias de agrupamento e PCA para visualização bidimensional.
+- **`Modelo_Complementar.ipynb`:** amplia a análise do SVM selecionado, investigando o ajuste do limiar de decisão com base em previsões *Out-of-Fold* (OOF), com foco em diferentes metas de sensibilidade (Recall).
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MaineCalabrezi13/Classificacao-Cancer-Mama-ML/blob/main/Modelos_Unidos.ipynb)
+Em conjunto, os experimentos investigam tanto o efeito dos atributos derivados das distâncias aos centroides do K-Means quanto a relação entre limiar de decisão e identificação de tumores malignos. Os modelos são ferramentas experimentais de apoio à análise de dados e **não substituem avaliação, diagnóstico ou decisão de profissionais de saúde**.
+
+[![Open In Colab - Modelos Unidos](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MaineCalabrezi13/Classificacao-Cancer-Mama-ML/blob/main/Modelos_Unidos.ipynb)
+[![Open In Colab - Modelo Complementar](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MaineCalabrezi13/Classificacao-Cancer-Mama-ML/blob/main/Modelo_Complementar.ipynb)
 
 ---
 
@@ -19,8 +23,9 @@ O objetivo é investigar se a inclusão de atributos derivados das distâncias a
 7. [Avaliação dos modelos](#-7-avaliação-dos-modelos)
 8. [Validação cruzada aninhada e comparação estatística](#-8-validação-cruzada-aninhada-e-comparação-estatística)
 9. [Importância dos atributos](#-9-importância-dos-atributos)
-10. [Como executar](#-10-como-executar)
-11. [Conclusões](#-11-conclusões)
+10. [Experimento complementar: ajuste do limiar de decisão](#-10-experimento-complementar-ajuste-do-limiar-de-decisão)
+11. [Como executar](#-11-como-executar)
+12. [Conclusões](#-12-conclusões)
 
 ---
 
@@ -355,27 +360,78 @@ A análise sugere maior contribuição das dimensões geométricas para a classi
 
 ---
 
-## ▶️ 10. Como executar
+## 🎯 10. Experimento complementar: ajuste do limiar de decisão
 
-1. Acesse o notebook pelo botão **Open in Colab** no início deste README ou abra `Modelos_Unidos.ipynb` no Jupyter Notebook/JupyterLab.
-2. Execute as células na ordem apresentada.
-3. O dataset é carregado diretamente pelo `scikit-learn` por meio de `load_breast_cancer(as_frame=True)`.
-4. Aguarde a execução das etapas de busca de hiperparâmetros e Nested CV, que podem demandar maior tempo computacional.
+O notebook `Modelo_Complementar.ipynb` complementa a comparação de classificadores realizada em `Modelos_Unidos.ipynb`. Seu foco é avaliar o efeito do limiar usado para converter as probabilidades estimadas pelo SVM em previsões das classes Benigno e Maligno.
 
-Não é necessário fornecer um arquivo de dataset externo. O notebook salva o modelo final no arquivo `modelo_final_cancer_mama.joblib` quando a célula correspondente é executada.
+No experimento complementar, o limiar foi calibrado a partir de previsões **Out-of-Fold (OOF)** geradas somente com os dados de treinamento. Foram considerados alvos de Recall de 95%, 97,5%, 98% e 100%, e o limiar selecionado para a avaliação final foi aproximadamente **0,3840**. Essa estratégia busca priorizar a sensibilidade para a classe positiva (Maligno), sem utilizar o conjunto de teste para escolher o limiar.
+
+### 10.1. Resultados no conjunto de teste
+
+O SVM sem K-Means, com o limiar ajustado, apresentou:
+
+| Métrica | Resultado |
+|---|---:|
+| Acurácia | 97,37% |
+| Precisão | 95,35% |
+| Recall | 97,62% |
+| F1-Score | 96,47% |
+| ROC-AUC | 0.9957 |
+| Limiar de decisão | 0,3840 |
+
+A matriz de confusão, considerando Maligno como classe positiva, foi:
+
+| | Predito benigno | Predito maligno |
+|---|---:|---:|
+| **Real benigno** | 70 | 2 |
+| **Real maligno** | 1 | 41 |
+
+Assim, o modelo identificou 41 dos 42 casos malignos, com 1 falso negativo e 2 falsos positivos.
+
+### 10.2. Comparação com o experimento principal
+
+A tabela compara o SVM sem K-Means avaliado em `Modelos_Unidos.ipynb`, com limiar padrão de 0,5, e o resultado do experimento complementar, com limiar ajustado:
+
+| Métrica | Modelos Unidos (0,5) | Complementar (0,3840) |
+|---|---:|---:|
+| Acurácia | 98,25% | 97,37% |
+| Precisão | 100,00% | 95,35% |
+| Recall | 95,24% | 97,62% |
+| F1-Score | 97,56% | 96,47% |
+| ROC-AUC | 0.9957 | 0.9957 |
+| Falsos negativos | 2 | 1 |
+| Falsos positivos | 0 | 2 |
+
+No conjunto de teste, o limiar ajustado elevou o Recall em 2,38 pontos percentuais e reduziu os falsos negativos de dois para um. Em contrapartida, a acurácia e a precisão diminuíram, e os falsos positivos passaram de zero para dois. Portanto, o ajuste representa uma troca entre maior sensibilidade e maior quantidade de alarmes falsos, e não uma melhora em todas as métricas.
+
+O limiar deve ser interpretado como uma escolha experimental dependente dos dados e do objetivo definido. Mesmo com a calibração OOF, o resultado observado em um único conjunto de teste não garante o mesmo comportamento em outras amostras ou instituições.
 
 ---
 
-## 📝 11. Conclusões
+## ▶️ 11. Como executar
 
-Nos experimentos registrados, o SVM sem K-Means foi selecionado por apresentar o maior F1-Score no conjunto de validação (0.9655), com Recall de 0.9767 — igual ao cenário com K-Means. No conjunto de teste, os dois cenários do SVM alcançaram a mesma acurácia de 98.25%; assim, esse resultado não demonstra superioridade do cenário sem K-Means no teste. Para o modelo final selecionado (SVM sem K-Means), foram registrados precisão de 100.00%, Recall de 95.24%, F1-Score de 97.56% e ROC-AUC de 0.9957. Os modelos de ensemble também apresentaram desempenho elevado, enquanto a Árvore de Decisão isolada obteve resultados inferiores.
+1. Escolha o notebook que deseja executar pelos botões **Open in Colab** no início deste README ou abra o arquivo correspondente no Jupyter Notebook/JupyterLab.
+2. Execute as células na ordem apresentada.
+3. O dataset é carregado diretamente pelo `scikit-learn` por meio de `load_breast_cancer(as_frame=True)`; não é necessário fornecer um arquivo externo.
+4. No `Modelos_Unidos.ipynb`, aguarde as etapas de busca de hiperparâmetros e Nested CV, que podem demandar maior tempo computacional.
+5. O `Modelo_Complementar.ipynb` realiza o experimento de calibração do limiar com previsões OOF e a avaliação do limiar selecionado.
+
+O notebook principal salva o modelo final no arquivo `modelo_final_cancer_mama.joblib` quando a célula correspondente é executada.
+
+---
+
+## 📝 12. Conclusões
+
+No experimento principal, o SVM sem K-Means foi selecionado por apresentar o maior F1-Score no conjunto de validação (0.9655), com Recall de 0.9767 — igual ao cenário com K-Means. No conjunto de teste, os dois cenários do SVM alcançaram a mesma acurácia de 98.25%. Para o modelo final selecionado, com limiar padrão de 0,5, foram registrados precisão de 100.00%, Recall de 95.24%, F1-Score de 97.56% e ROC-AUC de 0.9957.
+
+O experimento complementar investigou o ajuste do limiar de decisão por previsões OOF. Com limiar aproximado de 0,3840, o SVM alcançou Recall de 97,62% no teste e reduziu os falsos negativos de dois para um, mas apresentou menor acurácia e precisão, além de dois falsos positivos. Esse resultado evidencia a troca entre sensibilidade e falsos alarmes, sem indicar melhora simultânea em todas as métricas.
 
 Na análise exploratória, o K-Means com K = 2 apresentou Silhouette Score de 0.3462, ARI de 0.6473 e NMI de 0.5246. Entretanto, a comparação por Nested CV não encontrou evidência estatisticamente significativa de diferença entre os cenários com e sem atributos derivados do K-Means. Portanto, neste conjunto de dados e sob o protocolo utilizado, não foi demonstrado ganho preditivo consistente com a inclusão dessas características.
 
-Como limitações, destacam-se o tamanho da base (569 amostras), o conjunto de teste relativamente pequeno (114 amostras) e a ausência de validação externa em dados de outra instituição. Os resultados são experimentais e não autorizam o uso do modelo como substituto de avaliação clínica ou diagnóstico profissional.
+Como limitações, destacam-se o tamanho da base (569 amostras), o conjunto de teste relativamente pequeno (114 amostras) e a ausência de validação externa em dados de outra instituição. Os resultados são experimentais e não autorizam o uso dos modelos como substitutos de avaliação clínica ou diagnóstico profissional.
 
 ---
 
 ## 📁 Repositório
 
-O repositório público **Classificacao-Cancer-Mama-ML** reúne o notebook `Modelos_Unidos.ipynb` e esta documentação. O dataset é carregado diretamente pela biblioteca `scikit-learn`.
+O repositório público **Classificacao-Cancer-Mama-ML** reúne os notebooks `Modelos_Unidos.ipynb` e `Modelo_Complementar.ipynb`, além desta documentação. O dataset é carregado diretamente pela biblioteca `scikit-learn`.

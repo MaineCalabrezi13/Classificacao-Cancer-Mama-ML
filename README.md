@@ -3,7 +3,7 @@
 Este projeto apresenta um estudo de modelos de Machine Learning aplicados ao conjunto de dados **Breast Cancer Wisconsin (Diagnostic) (WDBC)**, disponibilizado pela biblioteca `scikit-learn`. O repositório contém dois notebooks complementares:
 
 - **`Modelos_Unidos.ipynb`:** compara quatro classificadores supervisionados — Árvore de Decisão, Support Vector Machine (SVM), Random Forest e Gradient Boosting — nos cenários **Sem K-Means** e **Com K-Means**. Também utiliza K-Means em análises exploratórias de agrupamento e PCA para visualização bidimensional.
-- **`Modelo_Complementar.ipynb`:** amplia a análise do SVM selecionado, investigando o ajuste do limiar de decisão com base em previsões *Out-of-Fold* (OOF), com foco em diferentes metas de sensibilidade (Recall).
+- **`Modelo_Complementar.ipynb`:** realiza um experimento adicional de calibração do limiar de decisão por meio de previsões *Out-of-Fold* (OOF), avaliando diferentes metas de sensibilidade (Recall) e comparando os oito pipelines. Nesse experimento, o modelo selecionado foi o SVM com K-Means.
 
 Em conjunto, os experimentos investigam tanto o efeito dos atributos derivados das distâncias aos centroides do K-Means quanto a relação entre limiar de decisão e identificação de tumores malignos. Os modelos são ferramentas experimentais de apoio à análise de dados e **não substituem avaliação, diagnóstico ou decisão de profissionais de saúde**.
 
@@ -362,49 +362,59 @@ A análise sugere maior contribuição das dimensões geométricas para a classi
 
 ## 🎯 10. Experimento complementar: ajuste do limiar de decisão
 
-O notebook `Modelo_Complementar.ipynb` complementa a comparação de classificadores realizada em `Modelos_Unidos.ipynb`. Seu foco é avaliar o efeito do limiar usado para converter as probabilidades estimadas pelo SVM em previsões das classes Benigno e Maligno.
+O notebook `Modelo_Complementar.ipynb` amplia a análise dos classificadores por meio da investigação do ajuste do limiar de decisão. O objetivo é avaliar como diferentes limiares influenciam a classificação das amostras como Benignas ou Malignas, especialmente em relação à sensibilidade (Recall).
 
-No experimento complementar, o limiar foi calibrado a partir de previsões **Out-of-Fold (OOF)** geradas somente com os dados de treinamento. Foram considerados alvos de Recall de 95%, 97,5%, 98% e 100%, e o limiar selecionado para a avaliação final foi aproximadamente **0,3840**. Essa estratégia busca priorizar a sensibilidade para a classe positiva (Maligno), sem utilizar o conjunto de teste para escolher o limiar.
+Diferentemente do experimento principal, esta etapa realiza a calibração do limiar a partir de previsões **Out-of-Fold (OOF)** geradas exclusivamente com os dados de treinamento. Foram considerados alvos de Recall de 95%, 97,5%, 98% e 100%.
 
-### 10.1. Resultados no conjunto de teste
+A seleção do modelo considerou os resultados da validação, utilizando critérios hierárquicos de F1-Score, Recall e ROC-AUC. O modelo selecionado foi o **SVM com K-Means**, com limiar de decisão de aproximadamente **0,2717**.
 
-O SVM sem K-Means, com o limiar ajustado, apresentou:
+### 10.1. Calibração do limiar
+
+Para a meta de Recall de 98%, o procedimento de calibração OOF selecionou o limiar de aproximadamente 0,2717 para o SVM com K-Means. Nas previsões OOF utilizadas nessa calibração, foram identificados 125 dos 127 casos malignos, correspondendo a Recall de 98,43%.
+
+Esse resultado descreve o desempenho nas previsões OOF de calibração e não representa uma garantia de que a mesma meta será atingida em dados independentes.
+
+### 10.2. Resultados no conjunto de teste
+
+O SVM com K-Means, utilizando o limiar ajustado, apresentou:
 
 | Métrica | Resultado |
 |---|---:|
-| Acurácia | 97,37% |
-| Precisão | 95,35% |
+| Acurácia | 94,74% |
+| Precisão | 89,13% |
 | Recall | 97,62% |
-| F1-Score | 96,47% |
-| ROC-AUC | 0.9957 |
-| Limiar de decisão | 0,3840 |
+| F1-Score | 93,18% |
+| ROC-AUC | 0,9957 |
+| Limiar de decisão | 0,2717 |
 
 A matriz de confusão, considerando Maligno como classe positiva, foi:
 
 | | Predito benigno | Predito maligno |
 |---|---:|---:|
-| **Real benigno** | 70 | 2 |
+| **Real benigno** | 67 | 5 |
 | **Real maligno** | 1 | 41 |
 
-Assim, o modelo identificou 41 dos 42 casos malignos, com 1 falso negativo e 2 falsos positivos.
+Assim, o modelo identificou 41 dos 42 casos malignos, registrando 1 falso negativo e 5 falsos positivos.
 
-### 10.2. Comparação com o experimento principal
+### 10.3. Comparação entre os limiares de decisão
 
-A tabela compara o SVM sem K-Means avaliado em `Modelos_Unidos.ipynb`, com limiar padrão de 0,5, e o resultado do experimento complementar, com limiar ajustado:
+Para avaliar o efeito do ajuste do limiar, foram comparados os resultados do mesmo modelo (SVM com K-Means) no conjunto de teste, utilizando o limiar padrão de 0,5 e o limiar calibrado de 0,2717.
 
-| Métrica | Modelos Unidos (0,5) | Complementar (0,3840) |
+| Métrica | Limiar 0,5 | Limiar 0,2717 |
 |---|---:|---:|
-| Acurácia | 98,25% | 97,37% |
-| Precisão | 100,00% | 95,35% |
-| Recall | 95,24% | 97,62% |
-| F1-Score | 97,56% | 96,47% |
-| ROC-AUC | 0.9957 | 0.9957 |
-| Falsos negativos | 2 | 1 |
-| Falsos positivos | 0 | 2 |
+| Acurácia | 98,25% | 94,74% |
+| Precisão | 97,62% | 89,13% |
+| Recall | 97,62% | 97,62% |
+| F1-Score | 97,62% | 93,18% |
+| ROC-AUC | 0,9957 | 0,9957 |
+| Falsos negativos | 1 | 1 |
+| Falsos positivos | 1 | 5 |
 
-No conjunto de teste, o limiar ajustado elevou o Recall em 2,38 pontos percentuais e reduziu os falsos negativos de dois para um. Em contrapartida, a acurácia e a precisão diminuíram, e os falsos positivos passaram de zero para dois. Portanto, o ajuste representa uma troca entre maior sensibilidade e maior quantidade de alarmes falsos, e não uma melhora em todas as métricas.
+Neste conjunto de teste, a redução do limiar não aumentou o Recall nem reduziu os falsos negativos. Ambos os limiares identificaram 41 dos 42 casos malignos. Entretanto, o limiar ajustado aumentou os falsos positivos de 1 para 5, reduzindo a precisão, a acurácia e o F1-Score.
 
-O limiar deve ser interpretado como uma escolha experimental dependente dos dados e do objetivo definido. Mesmo com a calibração OOF, o resultado observado em um único conjunto de teste não garante o mesmo comportamento em outras amostras ou instituições.
+Esse resultado demonstra que a calibração realizada com previsões OOF, embora tenha atingido a meta de Recall nos dados de calibração, não garante que o mesmo ganho seja observado em um conjunto de teste independente.
+
+O experimento evidencia a importância de avaliar o comportamento do limiar em dados não utilizados durante sua seleção, especialmente quando o objetivo é priorizar a identificação de casos positivos.
 
 ---
 
@@ -414,7 +424,7 @@ O limiar deve ser interpretado como uma escolha experimental dependente dos dado
 2. Execute as células na ordem apresentada.
 3. O dataset é carregado diretamente pelo `scikit-learn` por meio de `load_breast_cancer(as_frame=True)`; não é necessário fornecer um arquivo externo.
 4. No `Modelos_Unidos.ipynb`, aguarde as etapas de busca de hiperparâmetros e Nested CV, que podem demandar maior tempo computacional.
-5. O `Modelo_Complementar.ipynb` realiza o experimento de calibração do limiar com previsões OOF e a avaliação do limiar selecionado.
+5. O `Modelo_Complementar.ipynb` realiza a calibração do limiar com previsões OOF, a seleção e avaliação do modelo, análises complementares e a comparação estatística por Nested CV.
 
 O notebook principal salva o modelo final no arquivo `modelo_final_cancer_mama.joblib` quando a célula correspondente é executada.
 
@@ -422,9 +432,9 @@ O notebook principal salva o modelo final no arquivo `modelo_final_cancer_mama.j
 
 ## 📝 12. Conclusões
 
-No experimento principal, o SVM sem K-Means foi selecionado por apresentar o maior F1-Score no conjunto de validação (0.9655), com Recall de 0.9767 — igual ao cenário com K-Means. No conjunto de teste, os dois cenários do SVM alcançaram a mesma acurácia de 98.25%. Para o modelo final selecionado, com limiar padrão de 0,5, foram registrados precisão de 100.00%, Recall de 95.24%, F1-Score de 97.56% e ROC-AUC de 0.9957.
+No experimento principal, o SVM sem K-Means foi selecionado por apresentar o maior F1-Score no conjunto de validação (0.9655), com Recall de 0.9767 — igual ao cenário com K-Means. Essa seleção pertence ao notebook principal e não deve ser confundida com a seleção realizada no experimento complementar. No conjunto de teste, os dois cenários do SVM alcançaram a mesma acurácia de 98.25%. Para o modelo final selecionado, com limiar padrão de 0,5, foram registrados precisão de 100.00%, Recall de 95.24%, F1-Score de 97.56% e ROC-AUC de 0.9957.
 
-O experimento complementar investigou o ajuste do limiar de decisão por previsões OOF. Com limiar aproximado de 0,3840, o SVM alcançou Recall de 97,62% no teste e reduziu os falsos negativos de dois para um, mas apresentou menor acurácia e precisão, além de dois falsos positivos. Esse resultado evidencia a troca entre sensibilidade e falsos alarmes, sem indicar melhora simultânea em todas as métricas.
+O experimento complementar investigou a calibração do limiar de decisão por meio de previsões OOF. Nesse cenário, o SVM com K-Means foi selecionado, utilizando limiar de aproximadamente 0,2717. No conjunto de teste, obteve acurácia de 94,74%, precisão de 89,13%, Recall de 97,62%, F1-Score de 93,18% e ROC-AUC de 0,9957. Apesar de a meta de Recall ter sido atingida durante a calibração OOF, o limiar ajustado não aumentou o Recall no teste em comparação ao limiar padrão de 0,5: ambos identificaram 41 dos 42 casos malignos. O limiar ajustado, porém, aumentou os falsos positivos de um para cinco, reduzindo a precisão, a acurácia e o F1-Score.
 
 Na análise exploratória, o K-Means com K = 2 apresentou Silhouette Score de 0.3462, ARI de 0.6473 e NMI de 0.5246. Entretanto, a comparação por Nested CV não encontrou evidência estatisticamente significativa de diferença entre os cenários com e sem atributos derivados do K-Means. Portanto, neste conjunto de dados e sob o protocolo utilizado, não foi demonstrado ganho preditivo consistente com a inclusão dessas características.
 
